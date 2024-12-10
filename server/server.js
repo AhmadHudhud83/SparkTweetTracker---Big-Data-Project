@@ -6,13 +6,15 @@ const mongoose = require("mongoose");
 const app = express();
 const cors  = require("cors")
 app.use(cors())
-// MongoDB Database Config
-mongoose.connect(
-  `mongodb+srv://${process.env.AHMAD_HUDHUD_USERNAME}:${process.env.AHMAD_HUDHUD_PASSWORD}@cluster0.aq5ou.mongodb.net/${process.env.DATABASE}?retryWrites=true&w=majority&appName=Cluster0`
-);
 
+
+mongoose.connect('mongodb+srv://ahmad:ahmad1212@cluster0.aq5ou.mongodb.net/SparkTweetsStorage?retryWrites=true&w=majority&appName=Cluster0', 
+)
+.then(() => console.log('Connected to MongoDB'))
+.catch(err => console.error('Connection error:', err));
 
 const TweetModel = require('./models/Tweets.js')
+
 
 app.get("/tweets",async (req,res)=>{
     const tweets = await TweetModel.find();
@@ -23,7 +25,7 @@ app.get("/tweets",async (req,res)=>{
 
 //Server Config
 
-PORT_ = "5000";
+PORT_= "5000";
 app.listen(PORT_, () => {
   console.log(`Server is Listening at ${PORT_}`);
 });
