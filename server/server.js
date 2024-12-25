@@ -40,6 +40,29 @@ app.get("/tweets/country/:countryName", async (req, res) => {
   }
 });
 
+app.get("/tweets/search", async (req, res) => {
+  const { keyword } = req.query;
+
+  if (!keyword) {
+    return res.status(400).json({ error: "Please provide a keyword or phrase to search for." });
+  }
+
+  try {
+    const regex = new RegExp(`\\b${keyword}\\b`, "i");
+    const tweets = await TweetModel.find({
+      text: { $regex: regex }
+    }).lean();
+
+    if (tweets.length === 0) {
+      return res.status(404).json({ message: "No tweets found with the given keyword or phrase." });
+    }
+
+    res.json(tweets);
+  } catch (error) {
+    console.error("Error fetching tweets by keyword or phrase:", error);
+    res.status(500).send("Error fetching tweets by keyword or phrase");
+  }
+});
 
 
 PORT_= "5000";
