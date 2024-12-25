@@ -6,9 +6,7 @@ const app = express();
 const cors  = require("cors")
 app.use(cors())
 
-const options = {
-  provider: 'openstreetmap', 
-};
+
 
 
 mongoose.connect('mongodb+srv://ahmad:ahmad1212@cluster0.aq5ou.mongodb.net/SparkTweetsStorage?retryWrites=true&w=majority&appName=Cluster0', 
