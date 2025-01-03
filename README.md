@@ -115,5 +115,4 @@ Contributors names and contact info
 - [MongoDB ](https://www.mongodb.com/docs/manual/core/document/)
 - [MERN Stack Tutorial](https://www.youtube.com/watch?v=Akt98GIXArg)
 - [Chartjs for Histogram Distribution & For Sentiment Analysis Gauge ](https://www.chartjs.org/docs/latest/)
-- [Chartjs for Histogram Distribution & For Sentiment Analysis Gauge ](https://www.chartjs.org/docs/latest/)
 - [Socket.io for low latency & real-time dashboard ](https://socket.io/docs/v4/)
