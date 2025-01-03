@@ -1,9 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState,useEffect } from 'react';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import { Bar } from 'react-chartjs-2';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import 'chart.js/auto';
+import Navbar from './Navbar.js';
+import '../App.css'
 import { Doughnut } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
@@ -14,6 +16,11 @@ import {
   LinearScale,
   BarElement,
 } from 'chart.js';
+import io from "socket.io-client";
+
+const socket = io("http://localhost:5000", {
+  withCredentials: true,
+});
 
 ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement);
 
@@ -22,23 +29,37 @@ function MapView() {
   const [keyword, setKeyword] = useState('');
   const [count, setCount] = useState(0);
   const [chartData, setChartData] = useState({});
+  // const [selectedCountry, setSelectedCountry] = useState("");
   const [dailyChartData, setDailyChartData] = useState({});
   const [timeInterval] = useState('hourly');
   const [avgSentiment, setAvgSentiment] = useState(0);
+  const [errorMessage, setErrorMessage] = useState("");
 
-  const customIcon = new L.Icon({
-    iconUrl: require('../images/icon.png'),
-    iconSize: [25, 30],
-    iconAnchor: [17.5, 45],
-    popupAnchor: [0, -45],
-  });
-
+  const customIcon = (se)=>{
+    let iconUrl;
+    if(se==1){
+      iconUrl=require("../images/greenmarker.png");
+    
+    } else{
+    
+      iconUrl=require("../images/icon.png");
+    
+    
+    }
+      return new L.Icon({
+      iconUrl: iconUrl,
+      iconSize: [25, 30],
+      iconAnchor: [17.5, 45],
+      popupAnchor: [0, -45],
+    });
+      }
   const calculateAvgSentiment = (tweets) => {
     const totalSentiment = tweets.reduce((sum, tweet) => sum + tweet.sentimentScore, 0);
     return totalSentiment / tweets.length;
   };
 
   const handleSearch = async (e) => {
+    console.log("ok");
     e.preventDefault();
 
     try {
@@ -53,13 +74,19 @@ function MapView() {
         generateDailyChartData(result);
         const avgSentimentScore = calculateAvgSentiment(result);
         setAvgSentiment(avgSentimentScore);
+        socket.emit("subscribeToKeyword", keyword);
+        setErrorMessage([]);
       } else {
         setTweets([]);
         setCount(0);
+        setErrorMessage(result.message || "No tweets found.");
         console.error('Error:', result.message || 'No tweets found.');
       }
     } catch (error) {
       console.error('Error fetching tweets:', error);
+    }
+    return () => {
+      socket.off("newTweet");
     }
   };
 
@@ -140,9 +167,39 @@ function MapView() {
     ],
   };
 
+  const [tweetCount, setTweetCount] = useState(0);
+  useEffect(() => {
+    socket.on("newTweet", (newTweet) => {
+      if (newTweet.text.toLowerCase().includes(keyword.toLowerCase())) {
+        console.log("Received new relevant tweet:", newTweet);
+  
+        setTweets((prevTweets) => {
+          const updatedTweets = [...prevTweets, newTweet]; 
+          generateChartData(updatedTweets);
+          generateDailyChartData(updatedTweets);
+          const avgSentimentScore = calculateAvgSentiment(updatedTweets);
+          setAvgSentiment(avgSentimentScore);
+          setErrorMessage([]);
+          return updatedTweets;
+        });
+  
+        setTweetCount((prevCount) => prevCount + 1); 
+      } else {
+        console.log("Tweet ignored, does not match keyword:", newTweet);
+      }
+    }); 
+  
+    return () => {
+      console.log("Cleaning up socket listener");
+      socket.off("newTweet"); 
+    };
+  }, [keyword]);
+  
   return (
+    <>
+    <Navbar/>
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '20px', maxWidth: '1200px', margin: '0 auto' }}>
-      {/* search */}
+
       <form onSubmit={handleSearch} style={{ width: '100%', marginBottom: '20px', textAlign: 'center' }}>
         <input
           type="text"
@@ -155,11 +212,16 @@ function MapView() {
           Search
         </button>
       </form>
-       {/* map */}
+      {errorMessage && (
+  <div style={{ color: "red", marginTop: "10px" }}>
+    {errorMessage}
+  </div>
+)}
+ 
        <div style={{ width: '100%', height: '500px', marginBottom: '20px' }}>
         <MapContainer
-          center={[32.806671, -86.79113]}
-          zoom={5}
+          center={[34.91285971911652, 32.89202341942484]}
+          zoom={2.2}
           style={{ width: '100%', height: '100%' }}
         >
           <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
@@ -170,7 +232,7 @@ function MapView() {
                 <Marker
                   key={tweet._id}
                   position={[coordinates[1], coordinates[0]]}
-                  icon={customIcon}
+                  icon={customIcon(tweet.sentimentScore)}
                 >
                   <Popup>
                     <div>
@@ -190,7 +252,7 @@ function MapView() {
         </MapContainer>
       </div>
 
-      {/* feel*/}
+
       <div style={{ width: '100%', marginBottom: '20px', textAlign: 'center' }}>
         <h3>Sentiment Gauge</h3>
         <div style={{ width: '250px', margin: '0 auto' }}>
@@ -199,20 +261,29 @@ function MapView() {
         <p>Avg Sentiment: {avgSentiment.toFixed(2)}</p>
       </div>
 
-      {/* histogram*/}
-      <div style={{ width: '100%', marginBottom: '20px' }}>
-        {count > 0 ? (
-          <>
-            <h3>Hourly Tweet Distribution</h3>
-            <Bar data={chartData} />
-            <h3>Daily Tweet Distribution</h3>
-            <Bar data={dailyChartData} />
-          </>
-        ) : (
-          <div style={{ textAlign: 'center' }}>No data to display</div>
-        )}
+   
+      <div style={{ width: '100%', marginBottom: '20px', padding: '20px', borderRadius: '8px' }}>
+  {count > 0 ? (
+    <div className="container">
+      <h3 style={{ textAlign: 'center', marginBottom: '30px' }}>Tweet Distribution</h3>
+      <div className="d-flex justify-content-between">
+        <div style={{ flex: 1, marginRight: '10px' }}>
+          <h4 >Hourly Tweet Distribution</h4>
+          <Bar data={chartData} />
+        </div>
+        <div style={{ flex: 1, marginLeft: '10px' }}>
+          <h4 >Daily Tweet Distribution</h4>
+          <Bar data={dailyChartData} />
+        </div>
       </div>
     </div>
+  ) : (
+    <div style={{ textAlign: 'center', color: '#ffffff' }}>No data to display</div>
+  )}
+</div>
+
+</div>
+</>
   );
 }
 
