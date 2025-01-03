@@ -1,4 +1,4 @@
-# Spark Streaming Pipeline App
+# Spark Tweets Tracker App
 
 This project is a web application with a dashboard interface that tracks tweets by displaying the geographic coordinates of each tweet, creating a time-scaled histogram, and displaying the results of sentiment analysis.
 
