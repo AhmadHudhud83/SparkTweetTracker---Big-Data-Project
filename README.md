@@ -51,6 +51,18 @@ This project is a web application with a dashboard interface that tracks tweets 
 - **Socket.io**  
   Library: `socket.io`  
   Version: `v4.8.1`
+- **Socket.io-client**  
+  Library: `socket.io-client`  
+  Version: `v4.8.1`
+  
+- **React-Chartjs-2**  
+Library: `react-chartjs-2`  
+Version: `v5.3.0`
+ - **React-Leaflet**  
+Library: `react-leaflet`  
+Version: `v4.2.1`
+   
+  
 
 
 ### Installing
