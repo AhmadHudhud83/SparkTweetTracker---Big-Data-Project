@@ -1,6 +1,5 @@
 const TweetModel = require("../models/TweetModel");
 
-// استرجاع جميع التغريدات
 exports.getAllTweets = async (req, res) => {
   try {
     const tweets = await TweetModel.find().lean();
@@ -11,7 +10,6 @@ exports.getAllTweets = async (req, res) => {
   }
 };
 
-// البحث حسب الكلمة المفتاحية
 exports.searchTweetsByKeyword = async (req, res) => {
   const { keyword } = req.query;
 
@@ -34,7 +32,6 @@ exports.searchTweetsByKeyword = async (req, res) => {
   }
 };
 
-// البحث حسب الدولة
 exports.getTweetsByCountry = async (req, res) => {
   try {
     const countryName = req.params.countryName.toLowerCase();
