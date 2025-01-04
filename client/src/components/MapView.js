@@ -37,7 +37,7 @@ function MapView() {
 
   const customIcon = (se)=>{
     let iconUrl;
-    if(se==1){
+    if(se===1){
       iconUrl=require("../images/greenmarker.png");
     
     } else{
@@ -80,6 +80,7 @@ function MapView() {
         setTweets([]);
         setCount(0);
         setErrorMessage(result.message || "No tweets found.");
+        setAvgSentiment(0);
         console.error('Error:', result.message || 'No tweets found.');
       }
     } catch (error) {
@@ -167,9 +168,11 @@ function MapView() {
     ],
   };
 
-  const [tweetCount, setTweetCount] = useState(0);
   useEffect(() => {
     socket.on("newTweet", (newTweet) => {
+      console.log( "iam in outside if" +keyword)
+    if (!(!keyword || keyword.trim() === "")){
+      console.log( "iam in inside if" +keyword)
       if (newTweet.text.toLowerCase().includes(keyword.toLowerCase())) {
         console.log("Received new relevant tweet:", newTweet);
   
@@ -183,16 +186,19 @@ function MapView() {
           return updatedTweets;
         });
   
-        setTweetCount((prevCount) => prevCount + 1); 
       } else {
         console.log("Tweet ignored, does not match keyword:", newTweet);
       }
+
+    }
+   
     }); 
   
     return () => {
       console.log("Cleaning up socket listener");
       socket.off("newTweet"); 
     };
+     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [keyword]);
   
   return (
@@ -222,7 +228,10 @@ function MapView() {
         <MapContainer
           center={[34.91285971911652, 32.89202341942484]}
           zoom={2.2}
+          minZoom={1.5} 
+          maxZoom={18} 
           style={{ width: '100%', height: '100%' }}
+          wrap={false}
         >
           <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
           {tweets.map((tweet) => {
